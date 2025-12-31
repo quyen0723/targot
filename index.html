@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tarot 3 Lá - Bói Vui 2026</title>
+    <title>Tết Này Ai Độ?</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -53,8 +53,10 @@
             width: 100%;
             max-width: 1400px;
             margin: 0 auto;
-            overflow: visible;
+            overflow-x: auto;
+            overflow-y: visible;
             padding: 30px 10px 40px;
+            -webkit-overflow-scrolling: touch;
         }
 
         .card-spread {
@@ -67,14 +69,17 @@
 
         .card-row {
             display: flex;
-            justify-content: center;
+            justify-content: flex-start;
             margin-bottom: 15px;
+            padding-left: 20px;
+            padding-right: 20px;
         }
 
         .card-rows-container {
             display: flex;
             flex-direction: column;
-            align-items: center;
+            align-items: flex-start;
+            min-width: max-content;
         }
 
         /* --- SPREAD CARD STYLES --- */
@@ -289,10 +294,25 @@
 
         /* Mobile responsive */
         @media (max-width: 768px) {
+            .card-spread-container {
+                padding: 20px 0 30px;
+                margin-left: 0;
+                margin-right: 0;
+            }
+
+            .card-rows-container {
+                padding-left: 15px;
+            }
+
+            .card-row {
+                padding-left: 10px;
+                padding-right: 30px;
+            }
+
             .spread-card {
-                width: 55px;
-                height: 96px;
-                margin-left: -25px;
+                width: 50px;
+                height: 87px;
+                margin-left: -22px;
             }
 
             .spread-card:hover,
@@ -304,19 +324,26 @@
                 width: 80px;
             }
 
-            .card-spread-container {
-                padding: 20px 5px 30px;
-            }
-
             .card-spread {
                 gap: 6px 0;
+            }
+
+            /* Hint để người dùng biết có thể kéo */
+            .card-spread-container::after {
+                content: '← Kéo để xem thêm →';
+                display: block;
+                text-align: center;
+                color: rgba(255, 215, 0, 0.6);
+                font-size: 12px;
+                margin-top: 10px;
+                animation: pulse 2s infinite;
             }
         }
 
         @media (max-width: 480px) {
             .spread-card {
-                width: 42px;
-                height: 73px;
+                width: 45px;
+                height: 78px;
                 margin-left: -20px;
             }
 
@@ -342,6 +369,11 @@
             }
         }
 
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
     </style>
 </head>
 <body class="antialiased selection:bg-yellow-500 selection:text-red-900">
@@ -353,7 +385,7 @@
 
         <!-- HEADER -->
         <header class="text-center mb-8">
-            <h1 class="text-4xl md:text-6xl mystic-font text-yellow-400 drop-shadow-lg mb-2">Tarot 3 Lá</h1>
+            <h1 class="text-4xl md:text-6xl mystic-font text-yellow-400 drop-shadow-lg mb-2">Tết Này Ai Độ?</h1>
             <p class="text-white/80 text-sm md:text-lg italic">Quá Khứ - Hiện Tại - Tương Lai</p>
         </header>
 
