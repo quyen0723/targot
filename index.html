@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tarot 3 Lá - Bói Vui 2026</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:wght@400;700&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS (via CDN for speed) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Marked.js for markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        /* --- CUSTOM THEME & ANIMATIONS --- */
+        :root {
+            --tet-red: #D72638;
+            --tet-gold: #FFD700;
+            --tet-dark: #1a0a1a;
+            --paper-color: #FFFDF0;
+        }
+
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--tet-dark);
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(215, 38, 56, 0.15) 0%, transparent 30%),
+                radial-gradient(circle at 90% 80%, rgba(255, 215, 0, 0.1) 0%, transparent 30%);
+            color: white;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .handwriting {
+            font-family: 'Dancing Script', cursive;
+        }
+
+        .mystic-font {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* --- CARD SPREAD CONTAINER --- */
+        .card-spread-container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            overflow: visible;
+            padding: 30px 10px 40px;
+        }
+
+        .card-spread {
+            display: flex;
+            flex-wrap: nowrap;
+            align-items: center;
+            justify-content: center;
+            padding: 0 20px;
+        }
+
+        .card-row {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .card-rows-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* --- SPREAD CARD STYLES --- */
+        .spread-card {
+            width: 70px;
+            height: 122px;
+            flex-shrink: 0;
+            perspective: 1000px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-left: -30px;
+            position: relative;
+        }
+
+        .spread-card.row-start {
+            margin-left: 0;
+        }
+
+        .spread-card:hover {
+            transform: translateY(-20px) scale(1.15);
+            z-index: 100;
+        }
+
+        .spread-card.selected {
+            transform: translateY(-25px) scale(1.2);
+            z-index: 101;
+        }
+
+        .spread-card.disabled {
+            pointer-events: none;
+            opacity: 0.4;
+            filter: grayscale(50%);
+        }
+
+        .spread-card-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.4, 0.2, 0.2, 1);
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        .spread-card.flipped .spread-card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .spread-card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .spread-card-back {
+            background-color: #2a1a2a;
+            border: 2px solid var(--tet-gold);
+        }
+
+        .spread-card-back img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .spread-card-front {
+            transform: rotateY(180deg);
+            background-color: white;
+        }
+
+        .spread-card-front img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .spread-card.selected .spread-card-inner {
+            box-shadow: 0 0 30px 10px rgba(255, 215, 0, 0.7);
+        }
+
+        /* Selection indicator */
+        .selection-badge {
+            position: absolute;
+            top: -12px;
+            right: -12px;
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--tet-dark);
+            font-size: 14px;
+            z-index: 10;
+            box-shadow: 0 2px 10px rgba(255, 215, 0, 0.5);
+            animation: popIn 0.3s ease;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        /* --- SHUFFLE ANIMATION --- */
+        @keyframes shuffleCard {
+            0% { transform: translateX(0) translateY(0) rotate(0deg); }
+            25% { transform: translateX(100px) translateY(-50px) rotate(15deg); }
+            50% { transform: translateX(-100px) translateY(50px) rotate(-15deg); }
+            75% { transform: translateX(50px) translateY(-25px) rotate(10deg); }
+            100% { transform: translateX(0) translateY(0) rotate(0deg); }
+        }
+
+        .shuffling .card-row .spread-card {
+            animation: shuffleCard 0.6s ease-in-out;
+        }
+
+        .shuffling .card-row .spread-card:nth-child(odd) {
+            animation-delay: 0.05s;
+        }
+
+        .shuffling .card-row .spread-card:nth-child(3n) {
+            animation-delay: 0.1s;
+        }
+
+        /* --- UTILS --- */
+        .btn-gold {
+            background: linear-gradient(90deg, #FFD700, #FDB931);
+            color: #3F0D12;
+            font-weight: bold;
+            text-transform: uppercase;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            transition: all 0.3s;
+        }
+
+        .btn-gold:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+        }
+
+        .btn-gold:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .hidden-screen {
+            display: none;
+        }
+
+        .loader {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left-color: var(--tet-gold);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Result card styles */
+        .result-card-img {
+            width: 100px;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: transform 0.3s;
+        }
+
+        .result-card-img:hover {
+            transform: scale(1.1);
+        }
+
+        /* Prose styles for markdown */
+        .prose-result {
+            line-height: 1.8;
+        }
+
+        .prose-result h1, .prose-result h2, .prose-result h3 {
+            color: #FFD700;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .prose-result p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prose-result strong {
+            color: #FFD700;
+        }
+
+        .prose-result ul, .prose-result ol {
+            margin-left: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .prose-result li {
+            margin-bottom: 0.25rem;
+        }
+
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .spread-card {
+                width: 55px;
+                height: 96px;
+                margin-left: -25px;
+            }
+
+            .spread-card:hover,
+            .spread-card.selected {
+                transform: translateY(-15px) scale(1.15);
+            }
+
+            .result-card-img {
+                width: 80px;
+            }
+
+            .card-spread-container {
+                padding: 20px 5px 30px;
+            }
+
+            .card-spread {
+                gap: 6px 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .spread-card {
+                width: 42px;
+                height: 73px;
+                margin-left: -20px;
+            }
+
+            .spread-card:hover,
+            .spread-card.selected {
+                transform: translateY(-12px) scale(1.2);
+            }
+
+            .selection-badge {
+                width: 20px;
+                height: 20px;
+                font-size: 10px;
+                top: -6px;
+                right: -6px;
+            }
+
+            .result-card-img {
+                width: 70px;
+            }
+
+            .card-spread {
+                gap: 4px 0;
+            }
+        }
+
+    </style>
+</head>
+<body class="antialiased selection:bg-yellow-500 selection:text-red-900">
+
+    <!-- DECORATION: Falling Petals -->
+    <div class="fixed inset-0 pointer-events-none z-0 opacity-20" style="background-image: url('data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' viewBox=\'0 0 20 20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Ccircle cx=\'2\' cy=\'2\' r=\'1\' fill=\'%23ffd700\'/%3E%3C/svg%3E');"></div>
+
+    <div class="container mx-auto px-4 py-8 relative z-10 min-h-screen flex flex-col items-center">
+
+        <!-- HEADER -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-6xl mystic-font text-yellow-400 drop-shadow-lg mb-2">Tarot 3 Lá</h1>
+            <p class="text-white/80 text-sm md:text-lg italic">Quá Khứ - Hiện Tại - Tương Lai</p>
+        </header>
+
+        <!-- SCREEN 1: INPUT FORM -->
+        <div id="screen-input" class="w-full max-w-md bg-white/10 backdrop-blur-md p-8 rounded-2xl border border-white/20 shadow-2xl">
+            <div class="mb-4">
+                <label class="block text-yellow-300 text-sm font-bold mb-2" for="username">Tên của bạn</label>
+                <input class="w-full px-4 py-3 rounded-lg bg-black/30 border border-yellow-600/50 text-white focus:outline-none focus:border-yellow-400 transition" id="username" type="text" placeholder="Ví dụ: Lan">
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-yellow-300 text-sm font-bold mb-2">Bạn muốn hỏi về?</label>
+                <div class="grid grid-cols-3 gap-2 mb-2">
+                    <button onclick="selectTopic('Tình Yêu')" class="topic-btn border border-white/30 rounded-lg p-2 text-sm hover:bg-white/20 transition focus:ring-2 ring-yellow-400">Tình Yêu</button>
+                    <button onclick="selectTopic('Sự Nghiệp')" class="topic-btn border border-white/30 rounded-lg p-2 text-sm hover:bg-white/20 transition focus:ring-2 ring-yellow-400">Sự Nghiệp</button>
+                    <button onclick="selectTopic('Tiền Bạc')" class="topic-btn border border-white/30 rounded-lg p-2 text-sm hover:bg-white/20 transition focus:ring-2 ring-yellow-400">Tiền Bạc</button>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="selectTopic('Sức Khỏe')" class="topic-btn border border-white/30 rounded-lg p-2 text-sm hover:bg-white/20 transition focus:ring-2 ring-yellow-400">Sức Khỏe</button>
+                    <button onclick="selectTopic('Gia Đình')" class="topic-btn border border-white/30 rounded-lg p-2 text-sm hover:bg-white/20 transition focus:ring-2 ring-yellow-400">Gia Đình</button>
+                </div>
+            </div>
+
+            <div class="mb-8">
+                <label class="block text-yellow-300 text-sm font-bold mb-2" for="userQuestion">Câu hỏi cụ thể (Nếu có)</label>
+                <textarea class="w-full px-4 py-3 rounded-lg bg-black/30 border border-yellow-600/50 text-white focus:outline-none focus:border-yellow-400 transition resize-none" id="userQuestion" rows="2" placeholder="VD: Năm nay có người yêu không?"></textarea>
+            </div>
+
+            <button onclick="startJourney()" class="w-full btn-gold py-3 rounded-xl text-lg tracking-wider">Bắt Đầu Gieo Quẻ</button>
+        </div>
+
+        <!-- SCREEN 2: SELECT CARDS -->
+        <div id="screen-select" class="hidden-screen w-full text-center">
+            <h2 class="text-2xl text-white mb-2 handwriting">Hãy tĩnh tâm và chọn 3 lá bài...</h2>
+            <p class="text-yellow-300 mb-4">Quá Khứ - Hiện Tại - Tương Lai</p>
+
+            <!-- Controls -->
+            <div class="flex justify-center items-center gap-4 mb-4 flex-wrap">
+                <button id="shuffle-btn" onclick="shuffleDeck()" class="btn-gold px-6 py-2 rounded-lg flex items-center gap-2">
+                    <span>Xào Bài</span>
+                </button>
+                <div class="bg-white/10 px-4 py-2 rounded-lg">
+                    <span class="text-white">Đã chọn: </span>
+                    <span id="selected-count" class="text-yellow-400 font-bold">0</span>
+                    <span class="text-white">/3</span>
+                </div>
+            </div>
+
+            <!-- Card Spread Container -->
+            <div class="card-spread-container" id="card-spread-container">
+                <div class="card-rows-container" id="card-spread">
+                    <!-- Cards will be generated by JS in 2 rows -->
+                </div>
+            </div>
+
+            <!-- View Result Button -->
+            <button id="view-result-btn" onclick="showResult()"
+                class="hidden btn-gold mt-4 px-8 py-3 rounded-xl text-lg">
+                Xem Thông Điệp Vũ Trụ
+            </button>
+        </div>
+
+        <!-- SCREEN 3: RESULT -->
+        <div id="screen-result" class="hidden-screen w-full max-w-4xl">
+            <!-- Loading State -->
+            <div id="result-loading" class="text-center py-12">
+                <div class="loader mb-6"></div>
+                <p class="text-yellow-300 animate-pulse text-xl" id="loading-text">Đang kết nối với vũ trụ...</p>
+            </div>
+
+            <!-- Result Content -->
+            <div id="result-content" class="hidden">
+                <!-- 3 Cards Display -->
+                <div class="flex justify-center gap-4 md:gap-8 mb-8 flex-wrap">
+                    <div class="text-center">
+                        <p class="text-yellow-400 text-sm mb-2 font-bold">QUÁ KHỨ</p>
+                        <img id="card-1-img" class="result-card-img" src="" alt="">
+                        <p id="card-1-name" class="text-white text-xs mt-2"></p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-yellow-400 text-sm mb-2 font-bold">HIỆN TẠI</p>
+                        <img id="card-2-img" class="result-card-img" src="" alt="">
+                        <p id="card-2-name" class="text-white text-xs mt-2"></p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-yellow-400 text-sm mb-2 font-bold">TƯƠNG LAI</p>
+                        <img id="card-3-img" class="result-card-img" src="" alt="">
+                        <p id="card-3-name" class="text-white text-xs mt-2"></p>
+                    </div>
+                </div>
+
+                <!-- Reading Content -->
+                <div class="bg-white/10 backdrop-blur-md p-6 md:p-8 rounded-2xl border border-white/20">
+                    <h3 class="text-2xl text-yellow-400 mystic-font mb-4 text-center">Thông Điệp Từ Vũ Trụ</h3>
+                    <div id="reading-text" class="text-white prose-result">
+                        <!-- Gemini response will be inserted here -->
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-center gap-4 mt-8">
+                    <button onclick="resetApp()" class="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-full border border-white/30 transition">
+                        Bói Lại
+                    </button>
+                    <button onclick="shareResult()" class="btn-gold px-6 py-3 rounded-full">
+                        Chia Sẻ
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- CONFIG ---
+        const OPENAI_API_KEY = 'YOUR_OPENAI_API_KEY_HERE'; // Thay bằng API key của bạn
+        const CARDS_TO_SELECT = 3;
+
+        // --- STATE ---
+        let tarotData = [];
+        let shuffledDeck = [];
+        let selectedCards = [];
+        let isShuffling = false;
+        let userData = {
+            name: '',
+            topic: '',
+            question: ''
+        };
+
+        const loadingTexts = [
+            "Đang kết nối với vũ trụ...",
+            "Đang triệu hồi các vị thần...",
+            "Đang xin vía Thần Tài...",
+            "Tarot Reader đang lật sách...",
+            "Tín hiệu tâm linh hơi yếu, chờ xíu..."
+        ];
+
+        // --- INIT ---
+        async function initApp() {
+            try {
+                const response = await fetch('tarot-data.json');
+                const data = await response.json();
+                tarotData = data.cards;
+                console.log('Loaded', tarotData.length, 'cards');
+            } catch (error) {
+                console.error('Error loading tarot data:', error);
+                alert('Không thể tải dữ liệu bài Tarot. Vui lòng thử lại!');
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', initApp);
+
+        // --- TOPIC SELECTION ---
+        function selectTopic(topic) {
+            userData.topic = topic;
+            document.querySelectorAll('.topic-btn').forEach(btn => {
+                btn.classList.remove('bg-white/40', 'ring-2');
+                if(btn.textContent.includes(topic)) {
+                    btn.classList.add('bg-white/40', 'ring-2');
+                }
+            });
+        }
+
+        // --- START JOURNEY ---
+        function startJourney() {
+            const nameInput = document.getElementById('username').value.trim();
+            const questionInput = document.getElementById('userQuestion').value.trim();
+
+            if (!nameInput || !userData.topic) {
+                alert("Vui lòng nhập tên và chọn chủ đề!");
+                return;
+            }
+
+            userData.name = nameInput;
+            userData.question = questionInput;
+
+            // Switch screens
+            document.getElementById('screen-input').classList.add('hidden-screen');
+            document.getElementById('screen-select').classList.remove('hidden-screen');
+
+            // Shuffle and render
+            shuffleDeck();
+        }
+
+        // --- SHUFFLE DECK ---
+        function shuffleDeck() {
+            if (isShuffling) return;
+
+            // Reset state
+            selectedCards = [];
+            document.getElementById('selected-count').textContent = '0';
+            document.getElementById('view-result-btn').classList.add('hidden');
+
+            // Disable shuffle button during animation
+            isShuffling = true;
+            const shuffleBtn = document.getElementById('shuffle-btn');
+            shuffleBtn.disabled = true;
+
+            // Add shuffle animation class
+            const spread = document.getElementById('card-spread');
+            spread.classList.add('shuffling');
+
+            // Fisher-Yates shuffle
+            shuffledDeck = [...tarotData];
+            for (let i = shuffledDeck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffledDeck[i], shuffledDeck[j]] = [shuffledDeck[j], shuffledDeck[i]];
+            }
+
+            // Wait for animation then render
+            setTimeout(() => {
+                spread.classList.remove('shuffling');
+                renderCards();
+                isShuffling = false;
+                shuffleBtn.disabled = false;
+            }, 700);
+        }
+
+        // --- RENDER CARDS ---
+        function renderCards() {
+            const container = document.getElementById('card-spread');
+            container.innerHTML = '';
+
+            // Split 78 cards into 2 rows (39 each)
+            const row1Cards = shuffledDeck.slice(0, 39);
+            const row2Cards = shuffledDeck.slice(39, 78);
+
+            // Create row 1
+            const row1 = document.createElement('div');
+            row1.className = 'card-row';
+            row1Cards.forEach((card, index) => {
+                const cardEl = createCardElement(card, index);
+                row1.appendChild(cardEl);
+            });
+            container.appendChild(row1);
+
+            // Create row 2
+            const row2 = document.createElement('div');
+            row2.className = 'card-row';
+            row2Cards.forEach((card, index) => {
+                const cardEl = createCardElement(card, index + 39);
+                row2.appendChild(cardEl);
+            });
+            container.appendChild(row2);
+        }
+
+        function createCardElement(card, index) {
+            const cardWrapper = document.createElement('div');
+            cardWrapper.className = 'spread-card';
+            if (index === 0 || index === 39) {
+                cardWrapper.classList.add('row-start');
+            }
+            cardWrapper.dataset.cardId = card.id;
+            cardWrapper.dataset.index = index;
+
+            cardWrapper.innerHTML = `
+                <div class="spread-card-inner">
+                    <div class="spread-card-face spread-card-back">
+                        <img src="cards-png/matsaulabai.png" alt="Card Back">
+                    </div>
+                    <div class="spread-card-face spread-card-front">
+                        <img src="${card.image}" alt="${card.name}">
+                    </div>
+                </div>
+            `;
+
+            cardWrapper.onclick = () => onCardSelect(cardWrapper, card, index);
+            return cardWrapper;
+        }
+
+        // --- CARD SELECTION ---
+        function onCardSelect(element, card, index) {
+            // Prevent selection during shuffling
+            if (isShuffling) return;
+
+            // Check if already selected
+            if (selectedCards.find(c => c.id === card.id)) {
+                return;
+            }
+
+            // Check if max selected
+            if (selectedCards.length >= CARDS_TO_SELECT) {
+                return;
+            }
+
+            // Flip card and add selected class
+            element.classList.add('flipped', 'selected');
+
+            // Add selection badge
+            const badge = document.createElement('div');
+            badge.className = 'selection-badge';
+            badge.textContent = selectedCards.length + 1;
+            element.appendChild(badge);
+
+            // Add to selected
+            selectedCards.push(card);
+            document.getElementById('selected-count').textContent = selectedCards.length;
+
+            // Check if we have 3 cards
+            if (selectedCards.length === CARDS_TO_SELECT) {
+                // Disable all remaining cards
+                document.querySelectorAll('.spread-card:not(.selected)').forEach(el => {
+                    el.classList.add('disabled');
+                });
+
+                // Show result button after a short delay
+                setTimeout(() => {
+                    document.getElementById('view-result-btn').classList.remove('hidden');
+                }, 500);
+            }
+        }
+
+        // --- SHOW RESULT ---
+        async function showResult() {
+            // Switch to result screen
+            document.getElementById('screen-select').classList.add('hidden-screen');
+            document.getElementById('screen-result').classList.remove('hidden-screen');
+
+            // Show loading
+            document.getElementById('result-loading').classList.remove('hidden');
+            document.getElementById('result-content').classList.add('hidden');
+
+            // Animate loading text
+            let textIdx = 0;
+            const textInterval = setInterval(() => {
+                document.getElementById('loading-text').textContent = loadingTexts[textIdx % loadingTexts.length];
+                textIdx++;
+            }, 1500);
+
+            try {
+                // Get reading from Gemini
+                const reading = await getOpenAIReading();
+
+                clearInterval(textInterval);
+
+                // Display cards
+                displaySelectedCards();
+
+                // Display reading
+                document.getElementById('reading-text').innerHTML = parseMarkdown(reading);
+
+                // Show content
+                document.getElementById('result-loading').classList.add('hidden');
+                document.getElementById('result-content').classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Error getting reading:', error);
+                clearInterval(textInterval);
+
+                // Show fallback with error notice
+                displaySelectedCards();
+                const errorNotice = `
+⚠️ **Lưu ý:** Không thể kết nối Gemini API (${error.message}). Đây là bài đọc offline.
+
+---
+
+`;
+                document.getElementById('reading-text').innerHTML = parseMarkdown(errorNotice + generateFallbackReading());
+                document.getElementById('result-loading').classList.add('hidden');
+                document.getElementById('result-content').classList.remove('hidden');
+            }
+        }
+
+        // --- DISPLAY SELECTED CARDS ---
+        function displaySelectedCards() {
+            for (let i = 0; i < 3; i++) {
+                const card = selectedCards[i];
+                document.getElementById(`card-${i+1}-img`).src = card.image;
+                document.getElementById(`card-${i+1}-img`).alt = card.name;
+                document.getElementById(`card-${i+1}-name`).textContent = card.nameVi;
+            }
+        }
+
+        // --- OPENAI API CALL ---
+        async function getOpenAIReading() {
+            const hasQuestion = userData.question && userData.question.trim().length > 0;
+
+            // Prompt khác nhau tùy theo có câu hỏi cụ thể hay không
+            let prompt;
+
+            if (hasQuestion) {
+                // Prompt khi CÓ câu hỏi cụ thể - ưu tiên trả lời câu hỏi
+                prompt = `Bạn là chuyên gia Tarot 20 năm kinh nghiệm. Nhiệm vụ QUAN TRỌNG NHẤT: TRẢ LỜI TRỰC TIẾP câu hỏi của người dùng.
+
+👤 NGƯỜI HỎI: ${userData.name}
+📌 CHỦ ĐỀ: ${userData.topic}
+
+🎯 CÂU HỎI CẦN TRẢ LỜI: "${userData.question}"
+
+3 lá bài đã rút (Quá Khứ → Hiện Tại → Tương Lai):
+1. QUÁ KHỨ: ${selectedCards[0].nameVi} - ${selectedCards[0].keywords.join(', ')}
+2. HIỆN TẠI: ${selectedCards[1].nameVi} - ${selectedCards[1].keywords.join(', ')}
+3. TƯƠNG LAI: ${selectedCards[2].nameVi} - ${selectedCards[2].keywords.join(', ')}
+
+Ý nghĩa các lá:
+- ${selectedCards[0].nameVi}: ${selectedCards[0].meaning}
+- ${selectedCards[1].nameVi}: ${selectedCards[1].meaning}
+- ${selectedCards[2].nameVi}: ${selectedCards[2].meaning}
+
+===== BẮT BUỘC VIẾT THEO FORMAT SAU =====
+
+## 🎯 Trả Lời: "${userData.question}"
+(PHẦN NÀY LÀ QUAN TRỌNG NHẤT! Trả lời CỤ THỂ, TRỰC TIẾP câu hỏi "${userData.question}" dựa trên 3 lá bài. Đưa ra câu trả lời rõ ràng: Có/Không/Có thể, kèm giải thích ngắn gọn từ các lá bài. Ví dụ: "Có khả năng cao!" hoặc "Cần kiên nhẫn thêm..." Viết 3-4 câu tập trung vào câu hỏi.)
+
+## Câu Chuyện 3 Lá
+(2-3 câu kết nối 3 lá thành mạch truyện liên quan đến câu hỏi)
+
+## Phân Tích Chi Tiết
+### 🔮 Quá Khứ - ${selectedCards[0].nameVi}
+(Quá khứ ảnh hưởng thế nào đến câu hỏi)
+
+### ⚡ Hiện Tại - ${selectedCards[1].nameVi}
+(Tình hình hiện tại liên quan đến câu hỏi)
+
+### 🌟 Tương Lai - ${selectedCards[2].nameVi}
+(Triển vọng tương lai cho câu hỏi)
+
+## Lời Khuyên
+(Lời khuyên cụ thể để đạt được điều ${userData.name} mong muốn)
+
+Giọng văn: Thân thiện, vui vẻ, dùng emoji. QUAN TRỌNG: Viết tiếng Việt CÓ DẤU. PHẦN "Trả Lời" phải đặt LÊN ĐẦU và trả lời TRỰC TIẾP câu hỏi!`;
+            } else {
+                // Prompt khi KHÔNG có câu hỏi cụ thể
+                prompt = `Bạn là chuyên gia Tarot 20 năm kinh nghiệm, phong cách vui vẻ thân thiện.
+
+👤 NGƯỜI HỎI: ${userData.name}
+📌 CHỦ ĐỀ QUAN TÂM: ${userData.topic}
+
+3 lá bài đã rút (Quá Khứ → Hiện Tại → Tương Lai):
+1. QUÁ KHỨ: ${selectedCards[0].nameVi} - ${selectedCards[0].keywords.join(', ')}
+2. HIỆN TẠI: ${selectedCards[1].nameVi} - ${selectedCards[1].keywords.join(', ')}
+3. TƯƠNG LAI: ${selectedCards[2].nameVi} - ${selectedCards[2].keywords.join(', ')}
+
+Ý nghĩa các lá:
+- ${selectedCards[0].nameVi}: ${selectedCards[0].meaning}
+- ${selectedCards[1].nameVi}: ${selectedCards[1].meaning}
+- ${selectedCards[2].nameVi}: ${selectedCards[2].meaning}
+
+===== VIẾT THEO FORMAT SAU =====
+
+## Câu Chuyện 3 Lá Bài
+(2-3 câu kết nối 3 lá thành mạch truyện về ${userData.topic})
+
+## Phân Tích Chi Tiết
+
+### 🔮 Quá Khứ - ${selectedCards[0].nameVi}
+(Quá khứ đã ảnh hưởng thế nào đến ${userData.topic})
+
+### ⚡ Hiện Tại - ${selectedCards[1].nameVi}
+(Hiện tại cần chú ý gì về ${userData.topic})
+
+### 🌟 Tương Lai - ${selectedCards[2].nameVi}
+(Tương lai ${userData.topic} sẽ ra sao)
+
+## Lời Khuyên Cho ${userData.topic}
+(Lời khuyên cụ thể và thực tế)
+
+Giọng văn: Thân thiện, vui vẻ, dùng emoji phù hợp. QUAN TRỌNG: Viết tiếng Việt CÓ DẤU đầy đủ.`;
+            }
+
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${OPENAI_API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: 'gpt-4o-mini',
+                    messages: [
+                        { role: 'user', content: prompt }
+                    ],
+                    temperature: 0.8,
+                    max_tokens: 1500
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('API Error Response:', response.status, errorData);
+                throw new Error(`API request failed: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+            }
+
+            const data = await response.json();
+            console.log('OpenAI API Response:', data);
+
+            if (data.choices && data.choices[0] && data.choices[0].message) {
+                return data.choices[0].message.content;
+            } else {
+                console.error('Invalid API response structure:', data);
+                throw new Error('Invalid API response structure');
+            }
+        }
+
+        // --- PARSE MARKDOWN ---
+        function parseMarkdown(text) {
+            // Try using marked library first
+            if (typeof marked !== 'undefined' && marked.parse) {
+                try {
+                    return marked.parse(text);
+                } catch (e) {
+                    console.error('Marked parse error:', e);
+                }
+            }
+
+            // Fallback: simple regex-based markdown parsing
+            let html = text
+                // Headers
+                .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+                .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+                .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+                // Bold
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                // Italic
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                // Line breaks
+                .replace(/\n\n/g, '</p><p>')
+                .replace(/\n/g, '<br>');
+
+            return '<p>' + html + '</p>';
+        }
+
+        // --- FALLBACK READING ---
+        function generateFallbackReading() {
+            return `
+## Câu Chuyện 3 Lá Bài
+
+${userData.name} ơi, bộ 3 lá bài của bạn rất thú vị! Từ **${selectedCards[0].nameVi}** trong quá khứ, đến **${selectedCards[1].nameVi}** ở hiện tại, và hướng tới **${selectedCards[2].nameVi}** trong tương lai - đây là một hành trình đầy ý nghĩa!
+
+## Phân Tích Chi Tiết
+
+### 🔮 Quá Khứ - ${selectedCards[0].nameVi}
+${selectedCards[0].meaning}
+
+**Từ khóa:** ${selectedCards[0].keywords.join(', ')}
+
+### ⚡ Hiện Tại - ${selectedCards[1].nameVi}
+${selectedCards[1].meaning}
+
+**Từ khóa:** ${selectedCards[1].keywords.join(', ')}
+
+### 🌟 Tương Lai - ${selectedCards[2].nameVi}
+${selectedCards[2].meaning}
+
+**Từ khóa:** ${selectedCards[2].keywords.join(', ')}
+
+## Lời Khuyên Cho ${userData.topic}
+
+${selectedCards[0].advice} ${selectedCards[1].advice} ${selectedCards[2].advice}
+
+*Chúc ${userData.name} một năm mới thật nhiều may mắn và hạnh phúc!*
+            `;
+        }
+
+        // --- RESET APP ---
+        function resetApp() {
+            location.reload();
+        }
+
+        // --- SHARE RESULT ---
+        function shareResult() {
+            const text = `Toi vua boi Tarot 3 la!
+
+Qua Khu: ${selectedCards[0].nameVi}
+Hien Tai: ${selectedCards[1].nameVi}
+Tuong Lai: ${selectedCards[2].nameVi}
+
+Thu ngay tai: ${window.location.href}`;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Tarot 3 La - Ket Qua Boi',
+                    text: text,
+                    url: window.location.href
+                });
+            } else {
+                navigator.clipboard.writeText(text).then(() => {
+                    alert("Đã copy nội dung! Giờ dán lên Facebook thôi!");
+                });
+            }
+        }
+
+    </script>
+</body>
+</html>
