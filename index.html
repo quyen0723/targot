@@ -469,7 +469,7 @@
 
     <script>
         // --- CONFIG ---
-        const OPENAI_API_KEY = 'YOUR_OPENAI_API_KEY_HERE'; // Thay bằng API key của bạn
+        const TAROT_API_URL = 'https://tarot-api.quyennnm-work.workers.dev/';
         const CARDS_TO_SELECT = 3;
 
         // --- STATE ---
@@ -727,7 +727,7 @@
             }
         }
 
-        // --- OPENAI API CALL ---
+        // --- TAROT API CALL (via Cloudflare Worker) ---
         async function getOpenAIReading() {
             const hasQuestion = userData.question && userData.question.trim().length > 0;
 
@@ -814,11 +814,11 @@ Giọng văn: Thân thiện, vui vẻ, dùng emoji. QUAN TRỌNG: Viết tiếng
 Giọng văn: Thân thiện, vui vẻ, dùng emoji phù hợp. QUAN TRỌNG: Viết tiếng Việt CÓ DẤU đầy đủ.`;
             }
 
-            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            // Gọi Cloudflare Worker API thay vì OpenAI trực tiếp
+            const response = await fetch(TAROT_API_URL, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${OPENAI_API_KEY}`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     model: 'gpt-4o-mini',
@@ -831,15 +831,17 @@ Giọng văn: Thân thiện, vui vẻ, dùng emoji phù hợp. QUAN TRỌNG: Vi�
             });
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                console.error('API Error Response:', response.status, errorData);
-                throw new Error(`API request failed: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+                const errorText = await response.text().catch(() => 'Unknown error');
+                console.error('API Error Response:', response.status, errorText);
+                throw new Error(`API request failed: ${response.status} - ${errorText}`);
             }
 
             const data = await response.json();
-            console.log('OpenAI API Response:', data);
+            console.log('Tarot API Response:', data);
 
-            if (data.choices && data.choices[0] && data.choices[0].message) {
+            if (data.content) {
+                return data.content;
+            } else if (data.choices && data.choices[0] && data.choices[0].message) {
                 return data.choices[0].message.content;
             } else {
                 console.error('Invalid API response structure:', data);
